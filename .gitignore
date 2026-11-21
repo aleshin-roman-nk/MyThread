@@ -1,0 +1,39 @@
+# .NET build and test output
+/src/**/bin/
+/src/**/obj/
+/tests/**/bin/
+/tests/**/obj/
+/tests/**/TestResults/
+/.dotnet-home/
+/.nuget/
+
+# Angular dependencies, caches and build output
+/client/node_modules/
+/client/.angular/
+/client/dist/
+/client/out-tsc/
+/client/coverage/
+/.npm-cache/
+/client/.npm-cache/
+/src/DailyNotes.Web/wwwroot/
+
+# Local runtime files and SQLite data
+/artifacts/
+/src/DailyNotes.Web/App_Data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Local Visual Studio settings
+.vs/
+*.user
+*.suo

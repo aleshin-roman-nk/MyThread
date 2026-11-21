@@ -1,0 +1,23 @@
+.planning-editor { width: min(760px, calc(100% - 24px)); max-height: calc(100dvh - 24px); color: inherit; box-shadow: 0 24px 80px #152d3640; }
+.planning-editor::backdrop { background: #172b27a6; }
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.timing-fields { display: grid; grid-template-columns: 1.25fr .85fr 1fr 1.1fr; gap: 12px; align-items: end; }
+output { display: block; min-height: 44px; padding: 11px 0; color: #496642; font-variant-numeric: tabular-nums; }
+textarea { min-height: 90px; }
+.picker-toggle { margin-top: 10px; }
+.picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+.picker section { background: #f6f7ef; border: 1px solid #e0e4d9; border-radius: 9px; padding: 12px; overflow-wrap: anywhere; }
+.picker h3 { margin: 0 0 10px; font-size: 14px; }
+.picker ul { list-style: none; margin: 0; padding: 0; }
+.reference { display: flex; justify-content: space-between; align-items: start; gap: 8px; padding: 5px 0; font-size: 13px; }
+.reference small { display: block; color: #53664b; font-size: 11px; }
+.reference button { flex-shrink: 0; }
+.project-branch { padding: 5px 0; border-top: 1px solid #e0e4d9; font-size: 13px; }
+.project-branch summary { cursor: pointer; font-weight: 600; }
+.project-branch ul { padding-left: 10px; }
+.editor-actions { align-items: center; margin-top: 18px; }
+.delete { margin-left: auto; }
+@media (max-width: 600px) {
+  .timing-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+  .picker { grid-template-columns: 1fr; }
+}

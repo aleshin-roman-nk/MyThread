@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DailyNotes.Domain/DailyNotes.Domain.csproj" />
+    <Project Path="src/DailyNotes.Application/DailyNotes.Application.csproj" />
+    <Project Path="src/DailyNotes.Infrastructure/DailyNotes.Infrastructure.csproj" />
+    <Project Path="src/DailyNotes.Web/DailyNotes.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DailyNotes.Tests/DailyNotes.Tests.csproj" />
+  </Folder>
+</Solution>
+

@@ -1,0 +1,160 @@
+<div class="desktop-sheet">
+  <section class="desktop-canvas" #sheet aria-label="Рабочий стол">
+    <div class="desktop-toolbar" #toolbar>
+      <a class="button secondary back" routerLink="/" aria-label="Вернуться в Мой день" title="Мой день">←</a>
+      <h1>Рабочий стол</h1>
+      <div class="desktop-toolbar-actions">
+        <button type="button" (click)="createSticker()" [disabled]="loadingStickers() || !!stickersError()"
+                aria-label="Создать текстовый стикер" title="Создать текстовый стикер">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20H5V4h9l4 4v4M14 4v4h4m-1 6v8m-4-4h8" />
+          </svg>
+        </button>
+        <button #showSessionsButton type="button" class="secondary" (click)="sessionsVisible.set(true)"
+                aria-label="Показать область сессий" title="Показать область сессий"
+                aria-controls="desktop-sessions" [attr.aria-expanded]="sessionsVisible()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="14" rx="2" />
+            <path d="M4 9h16M8 13h8m-8 3h8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="desktop-sessions" class="desktop-sessions" #sessionsArea
+         [class.sessions-hidden]="!sessionsVisible()" [class.sessions-positioned]="sessionsPosition() !== null"
+         [style.left.px]="sessionsPosition()?.x" [style.top.px]="sessionsPosition()?.y"
+         (pointermove)="moveSessionsDrag($event)" (pointerup)="endSessionsDrag($event)"
+         (pointercancel)="endSessionsDrag($event)" (lostpointercapture)="endSessionsDrag($event)">
+      @if (sessionsError()) {
+        <p class="error" role="alert">{{ sessionsError() }} <button class="text-button" type="button" (click)="reloadSessions()">Повторить</button></p>
+      }
+      <app-day-sessions class="movable-heading" [sessions]="sessions()" [loading]="loadingSessions()"
+                        [unavailable]="!!sessionsError() && !sessions().length"
+                        [scrollable]="true" [allowClose]="true" [closing]="changingSession()"
+                        (closeSession)="closeSession($event)" (headingPointerDown)="startSessionsDrag($event)">
+        <button session-heading-action class="secondary hide-sessions" type="button" (click)="hideSessions(showSessionsButton)"
+                aria-label="Скрыть область сессий" title="Скрыть область сессий">×</button>
+      </app-day-sessions>
+    </div>
+
+    <div class="sticker sticker-size" #cardSize aria-hidden="true"></div>
+    @for (card of cards(); track card.sticker.id) {
+      @let sticker = card.sticker;
+      @let task = sticker.task;
+      @let note = sticker.note;
+      <article class="sticker" [class.dragging]="card.dragging"
+               tabindex="0" [attr.aria-label]="task ? 'Стикер задачи ' + task.fullCode : 'Стикер заметки'"
+               aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
+               [style.left.px]="card.position.x" [style.top.px]="card.position.y"
+               (pointerdown)="startDrag($event, sticker, card.position)" (pointermove)="moveDrag($event)"
+               (pointerup)="endDrag($event)" (pointercancel)="cancelDrag($event)"
+               (lostpointercapture)="cancelDrag($event)" (keydown)="moveWithKeys($event, sticker, card.position)">
+        <header class="sticker-heading">
+          <span>{{ task ? 'Задача' : note ? noteKindLabel(note) : 'Заметка' }}</span>
+          @if (task) {
+            <div class="sticker-actions">
+              <button type="button" class="sticker-action sticker-remove" [disabled]="moving() || removingStickerId() !== null"
+                      aria-label="Убрать с рабочего стола" title="Убрать с рабочего стола" (click)="removeSticker(sticker)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 3h7v1l-1 1v4l3 3v2h-4M9 5v4l-3 3v2h4m2 2v6M3 3l18 18" />
+                </svg>
+              </button>
+              <button type="button" class="sticker-action sticker-start" [disabled]="changingSession()"
+                      [attr.aria-label]="'Запустить сессию: ' + task.name" title="Запустить сессию" (click)="startSession(task)">▶</button>
+            </div>
+          } @else {
+            <div class="sticker-actions">
+              @if (note) {
+                <a class="sticker-action sticker-link" aria-label="Изменить исходную заметку"
+                   [routerLink]="noteLink(note)" [queryParams]="noteQuery(note)">Изменить</a>
+              } @else {
+                <button type="button" class="sticker-action" aria-label="Изменить заметку"
+                        [disabled]="removingStickerId() === sticker.id" (click)="editSticker(sticker)">Изменить</button>
+              }
+              <button type="button" class="sticker-action" aria-label="Просмотреть заметку полностью" (click)="readSticker(sticker)">Просмотр</button>
+              <button type="button" class="sticker-action sticker-remove" [disabled]="moving() || removingStickerId() !== null"
+                      [ariaLabel]="note ? 'Открепить заметку от рабочего стола' : 'Удалить текстовый стикер'"
+                      [title]="note ? 'Открепить заметку от рабочего стола' : 'Удалить текстовый стикер'" (click)="removeSticker(sticker)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  @if (note) {
+                    <path d="M9 3h7v1l-1 1v4l3 3v2h-4M9 5v4l-3 3v2h4m2 2v6M3 3l18 18" />
+                  } @else {
+                    <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7" />
+                  }
+                </svg>
+              </button>
+            </div>
+          }
+        </header>
+        @if (task) {
+          <button type="button" class="sticker-content sticker-task" [title]="task.fullCode + ' · ' + task.name"
+                  (click)="readSticker(sticker, $event)">
+            <span class="sticker-code">{{ task.fullCode }}</span>
+            <span class="sticker-text">{{ task.name }}</span>
+          </button>
+        } @else {
+          <div class="sticker-content">
+            @if (note) {
+              <p class="sticker-note-meta">{{ note.source }} · {{ note.date | date:'dd.MM.yyyy' }} · {{ formatNoteTime(note.time) }} · {{ note.rating }}/5</p>
+            }
+            <app-note-content class="sticker-markdown" [text]="note?.text ?? sticker.text ?? ''" />
+          </div>
+        }
+      </article>
+    }
+    @if (stickersError(); as error) {
+      <p class="error desktop-error" role="alert">
+        {{ error }} <button class="text-button" type="button" (click)="loadStickers()">Повторить</button>
+      </p>
+    }
+  </section>
+</div>
+
+@if (actionError(); as error) {
+  <div class="error desktop-popup">
+    <span role="alert">{{ error }}</span>
+    <button class="text-button" type="button" (click)="actionError.set('')">Закрыть</button>
+  </div>
+}
+
+<dialog #dialog class="panel sticker-dialog" aria-labelledby="sticker-dialog-title" (cancel)="cancelDialog($event)">
+  <div class="dialog-heading">
+    <h2 id="sticker-dialog-title">
+      @switch (dialogMode()) {
+        @case ('create') { Новый текстовый стикер }
+        @case ('edit') { Изменить заметку }
+        @case ('read') { {{ selectedSticker()?.task ? 'Задача' : 'Заметка' }} }
+      }
+    </h2>
+    <button class="dialog-close secondary" type="button" aria-label="Закрыть" [disabled]="saving()" (click)="closeDialog()">×</button>
+  </div>
+  @if (dialogMode() === 'create' || dialogMode() === 'edit') {
+    <form (ngSubmit)="saveSticker()" #form="ngForm">
+      <label for="sticker-text">Текст</label>
+      <textarea id="sticker-text" name="text" [(ngModel)]="draft" [disabled]="saving()" maxlength="4000" rows="8" required></textarea>
+      <p class="field-hint">{{ draft.length }} / 4000</p>
+      @if (dialogError()) { <p class="error" role="alert">{{ dialogError() }}</p> }
+      <div class="actions">
+        <button type="submit" [disabled]="form.invalid || !draft.trim() || saving()">
+          {{ saving() ? 'Сохраняем…' : dialogMode() === 'edit' ? 'Сохранить изменения' : 'Создать стикер' }}
+        </button>
+        <button class="secondary" type="button" [disabled]="saving()" (click)="closeDialog()">Отмена</button>
+      </div>
+    </form>
+  } @else if (selectedSticker(); as sticker) {
+    @if (sticker.task; as task) {
+      <p class="task-code">{{ task.fullCode }}</p>
+      <p>{{ task.name }}</p>
+      <a class="button secondary" [routerLink]="taskLink(task)">Открыть задачу</a>
+    } @else if (sticker.note; as note) {
+      <p>{{ noteKindLabel(note) }} · {{ note.source }} · {{ note.date | date:'dd.MM.yyyy' }} · {{ formatNoteTime(note.time) }} · Оценка {{ note.rating }}/5</p>
+      <app-note-content [text]="note.text" />
+      <a class="button secondary" [routerLink]="noteLink(note)" [queryParams]="noteQuery(note)">Изменить исходную заметку</a>
+    } @else {
+      <app-note-content [text]="sticker.text ?? ''" />
+    }
+  }
+</dialog>

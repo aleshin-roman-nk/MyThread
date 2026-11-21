@@ -1,0 +1,134 @@
+<dialog #dialog class="panel planning-editor" aria-labelledby="planning-editor-title" (cancel)="cancel($event)">
+  <div class="dialog-heading">
+    <h2 id="planning-editor-title">{{ activity() ? 'Изменить занятие' : 'Новое занятие' }}</h2>
+    <button type="button" class="secondary dialog-close" aria-label="Закрыть" [disabled]="busy()" (click)="cancel()">×</button>
+  </div>
+
+  <form (ngSubmit)="save()">
+    <fieldset [disabled]="busy() || confirmingDelete()">
+      <div class="timing-fields">
+        <div>
+          <label for="planning-date">Дата</label>
+          <app-date-input inputId="planning-date" name="date" required
+            [ngModel]="draftDate()" (ngModelChange)="draftDate.set($event)" />
+        </div>
+        <div>
+          <label for="planning-start">Начало (ЧЧ:ММ)</label>
+          <input id="planning-start" type="text" name="startTime" autocomplete="off" maxlength="5" placeholder="18:30"
+            required [pattern]="clockTimePattern" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)">
+        </div>
+        <div>
+          <label for="planning-duration">Длительность (ЧЧ:ММ)</label>
+          <input id="planning-duration" type="text" name="duration" placeholder="01:30" required
+            [ngModel]="duration()" (ngModelChange)="duration.set($event)">
+        </div>
+        <div>
+          <label for="planning-end">Окончание</label>
+          <output id="planning-end" for="planning-date planning-start planning-duration">{{ end() || '—' }}</output>
+        </div>
+      </div>
+
+      <label for="planning-description">Описание занятия</label>
+      <textarea id="planning-description" name="description" maxlength="4000" rows="3"
+        [ngModel]="description()" (ngModelChange)="description.set($event)"></textarea>
+
+      <label for="planning-subject">Предмет</label>
+      <select id="planning-subject" name="subject" [ngModel]="subjectId()" (ngModelChange)="changeSubject($event)">
+        <option [ngValue]="null">Без предмета</option>
+        @if (activity()?.subject; as original) {
+          @if (subjectsLoading() || subjectsError()) {
+            <option [ngValue]="original.id">{{ original.name }}</option>
+          }
+        }
+        @for (subject of subjects(); track subject.id) {
+          <option [ngValue]="subject.id">{{ subject.name }}</option>
+        }
+      </select>
+      @if (subjectsLoading()) {
+        <p class="muted" role="status">Загружаем предметы…</p>
+      } @else if (subjectsError()) {
+        <p class="error" role="alert">{{ subjectsError() }}
+          <button type="button" class="text-button" (click)="loadSubjects()">Повторить</button>
+        </p>
+      }
+
+      @if (subjectId() !== null) {
+        <button type="button" class="text-button picker-toggle" [attr.aria-expanded]="pickerOpen()"
+          aria-controls="planning-picker" (click)="pickerOpen.update(value => !value)">
+          {{ pickerOpen() ? 'Скрыть проекты и задачи' : 'Выбрать проекты и задачи' }} ({{ references().length }})
+        </button>
+        @if (pickerOpen()) {
+          <div id="planning-picker" class="picker">
+            <section aria-labelledby="planning-selected">
+              <h3 id="planning-selected">Прикреплено</h3>
+              <ul>
+                @for (reference of references(); track key(reference)) {
+                  <li class="reference">
+                    <span><small>{{ reference.taskId === null ? 'Проект' : 'Задача' }}</small>{{ reference.name }}</span>
+                    <button type="button" class="text-button danger" [attr.aria-label]="'Убрать ' + reference.name"
+                      (click)="removeReference(reference)">Убрать</button>
+                  </li>
+                } @empty {
+                  <li class="muted">Пока ничего не прикреплено.</li>
+                }
+              </ul>
+            </section>
+
+            <section aria-labelledby="planning-available">
+              <h3 id="planning-available">Проекты и задачи в работе</h3>
+              @if (projectsLoading()) {
+                <p class="muted" role="status">Загружаем проекты…</p>
+              } @else if (projectsError()) {
+                <p class="error" role="alert">{{ projectsError() }}
+                  <button type="button" class="text-button" (click)="retryProjects()">Повторить</button>
+                </p>
+              } @else {
+                @for (project of projects(); track project.id) {
+                  <details class="project-branch">
+                    <summary>{{ project.name }}</summary>
+                    <button type="button" class="text-button" [disabled]="keys().has('project-' + project.id)"
+                      (click)="addReference({ projectId: project.id, taskId: null, name: project.name })">
+                      {{ keys().has('project-' + project.id) ? 'Проект прикреплён' : '+ Прикрепить проект' }}
+                    </button>
+                    <ul>
+                      @for (task of project.tasks; track task.id) {
+                        <li class="reference">
+                          <span>{{ task.name }}</span>
+                          <button type="button" class="text-button" [disabled]="keys().has('task-' + task.id)"
+                            [attr.aria-label]="(keys().has('task-' + task.id) ? 'Прикреплена ' : 'Прикрепить ') + task.name"
+                            (click)="addReference({ projectId: project.id, taskId: task.id, name: task.name })">
+                            {{ keys().has('task-' + task.id) ? 'Прикреплена' : '+ Добавить' }}
+                          </button>
+                        </li>
+                      } @empty {
+                        <li class="muted">В проекте нет задач в работе.</li>
+                      }
+                    </ul>
+                  </details>
+                } @empty {
+                  <p class="muted">У предмета нет проектов в работе.</p>
+                }
+              }
+            </section>
+          </div>
+        }
+      }
+    </fieldset>
+
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+    <div class="actions editor-actions">
+      @if (confirmingDelete()) {
+        <span>Удалить занятие?</span>
+        <button type="button" [disabled]="busy()" (click)="deleteActivity()">Да, удалить</button>
+        <button type="button" class="secondary" [disabled]="busy()" (click)="confirmingDelete.set(false); error.set('')">Отмена</button>
+      } @else {
+        <button type="submit" [disabled]="busy()">Сохранить</button>
+        <button type="button" class="secondary" [disabled]="busy()" (click)="cancel()">Отмена</button>
+        @if (activity()) {
+          <button type="button" class="text-button danger delete" [disabled]="busy()"
+            (click)="confirmingDelete.set(true); error.set('')">Удалить занятие</button>
+        }
+      }
+    </div>
+  </form>
+</dialog>

@@ -1,0 +1,5 @@
+Generation mode: built-in image_gen.
+
+Use case: logo-brand. Create one polished, original primary app icon for a personal goal planning and time tracking application, concept 'Planning and flows'. Square 1024x1024 composition. A deep forest teal rounded-square tile (#214f46), with a bold ivory abstract symbol: three smooth parallel streams from the lower-left sweep upward and unite into one purposeful forward/upward flow, the upper curve subtly describes an incomplete clock circle with one simple short clock hand. Visually unified elegant symbol rather than separate clock plus arrows. Flat vector-like design with precise curves, generous negative space, very simple silhouette, readable at favicon size. Small muted sage accent on one stream only. Centered symbol occupying approximately 70% of tile with comfortable padding. Background outside rounded tile transparent. No lettering, no words, no numbers, no calendar grid, no checklists, no gradients, no 3D, no mockup, no decorative scene, no watermarks. Final usable standalone app icon, not a presentation board.
+
+transparent_background: true
