@@ -1,20 +1,20 @@
 @echo off
 setlocal
-set "DAILYNOTES_ROOT=%~dp0"
-set "DAILYNOTES_SCRIPT=%~f0"
-set "DAILYNOTES_NO_PAUSE=0"
-set "DAILYNOTES_REINSTALL=0"
+set "JCHRONO_ROOT=%~dp0"
+set "JCHRONO_SCRIPT=%~f0"
+set "JCHRONO_NO_PAUSE=0"
+set "JCHRONO_REINSTALL=0"
 for %%A in (%*) do (
-    if /i "%%~A"=="--no-pause" set "DAILYNOTES_NO_PAUSE=1"
-    if /i "%%~A"=="--reinstall" set "DAILYNOTES_REINSTALL=1"
+    if /i "%%~A"=="--no-pause" set "JCHRONO_NO_PAUSE=1"
+    if /i "%%~A"=="--reinstall" set "JCHRONO_REINSTALL=1"
 )
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create(((Get-Content -LiteralPath $env:DAILYNOTES_SCRIPT -Raw -Encoding UTF8) -split '(?m)^# POWERSHELL BEGIN\r?$',2)[1]))"
-set "DAILYNOTES_EXIT_CODE=%ERRORLEVEL%"
-if "%DAILYNOTES_NO_PAUSE%"=="0" pause
-exit /b %DAILYNOTES_EXIT_CODE%
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create(((Get-Content -LiteralPath $env:JCHRONO_SCRIPT -Raw -Encoding UTF8) -split '(?m)^# POWERSHELL BEGIN\r?$',2)[1]))"
+set "JCHRONO_EXIT_CODE=%ERRORLEVEL%"
+if "%JCHRONO_NO_PAUSE%"=="0" pause
+exit /b %JCHRONO_EXIT_CODE%
 # POWERSHELL BEGIN
 $ErrorActionPreference = 'Stop'
-$projectRoot = $env:DAILYNOTES_ROOT
+$projectRoot = $env:JCHRONO_ROOT
 $runtimeDirectory = Join-Path $projectRoot 'artifacts/server'
 $controlLock = $null
 $transcribing = $false
@@ -44,7 +44,7 @@ try {
         $npmVersion = & npm.cmd --version
         if ($LASTEXITCODE -ne 0) { throw 'Cannot determine npm version.' }
         $inputs = @(
-            'daily-notes-install-v1'
+            'jchrono-install-v1'
             (Get-DependencyHash 'package.json')
             (Get-DependencyHash 'package-lock.json')
             $nodeVersion
@@ -54,7 +54,7 @@ try {
             $inputs += Get-DependencyHash '.npmrc'
         }
         $inputSignature = $inputs -join '|'
-        $stampPath = 'node_modules/.daily-notes-install'
+        $stampPath = 'node_modules/.jchrono-install'
         $installedLockPath = 'node_modules/.package-lock.json'
         $dependenciesReady = $false
         if ((Test-Path -LiteralPath $stampPath) -and (Test-Path -LiteralPath $installedLockPath) -and
@@ -62,7 +62,7 @@ try {
             $currentSignature = $inputSignature + '|' + (Get-DependencyHash $installedLockPath)
             $dependenciesReady = (Get-Content -LiteralPath $stampPath -Raw).Trim() -eq $currentSignature
         }
-        if (!$dependenciesReady -or $env:DAILYNOTES_REINSTALL -eq '1') {
+        if (!$dependenciesReady -or $env:JCHRONO_REINSTALL -eq '1') {
             Write-Host 'Installing dependencies: first build, changed inputs, or --reinstall.'
             # Do not reuse a previous success marker if installation fails.
             if (Test-Path -LiteralPath $stampPath) { Remove-Item -LiteralPath $stampPath }

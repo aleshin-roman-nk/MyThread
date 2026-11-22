@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "daily-notes": {
+    "jchrono": {
       "projectType": "application",
       "root": "",
       "sourceRoot": "src",
@@ -12,7 +12,7 @@
           "builder": "@angular/build:application",
           "options": {
             "outputPath": {
-              "base": "../src/DailyNotes.Web/wwwroot",
+              "base": "../src/JChrono.Web/wwwroot",
               "browser": ""
             },
             "index": "src/index.html",
@@ -51,7 +51,7 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "development": {
-              "buildTarget": "daily-notes:build:development"
+              "buildTarget": "jchrono:build:development"
             }
           },
           "defaultConfiguration": "development"

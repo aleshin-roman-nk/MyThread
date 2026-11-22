@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../JChrono.Application/JChrono.Application.csproj" />
+    <ProjectReference Include="../JChrono.Infrastructure/JChrono.Infrastructure.csproj" />
+    <!-- Angular output is collected explicitly after its publish-time build. -->
+    <Content Remove="wwwroot/**/*" />
+    <Content Remove="App_Data/**/*" />
+  </ItemGroup>
+  <PropertyGroup>
+    <ClientRoot>$(MSBuildProjectDirectory)/../../client</ClientRoot>
+  </PropertyGroup>
+  <Target Name="BuildAngular" Condition="'$(SkipClientBuild)' != 'true'">
+    <Exec WorkingDirectory="$(ClientRoot)" Command="npm ci --no-audit --no-fund" />
+    <Exec WorkingDirectory="$(ClientRoot)" Command="npm run build" />
+  </Target>
+  <Target Name="PublishAngular" AfterTargets="ComputeFilesToPublish" DependsOnTargets="BuildAngular">
+    <ItemGroup>
+      <AngularFiles Include="wwwroot/**/*" />
+      <ResolvedFileToPublish Include="@(AngularFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot/%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>
+

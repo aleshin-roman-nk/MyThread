@@ -1,23 +1,23 @@
 @echo off
 setlocal
-set "DAILYNOTES_ROOT=%~dp0"
-set "DAILYNOTES_SCRIPT=%~f0"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create(((Get-Content -LiteralPath $env:DAILYNOTES_SCRIPT -Raw -Encoding UTF8) -split '(?m)^# POWERSHELL BEGIN\r?$',2)[1]))"
-set "DAILYNOTES_EXIT_CODE=%ERRORLEVEL%"
+set "JCHRONO_ROOT=%~dp0"
+set "JCHRONO_SCRIPT=%~f0"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create(((Get-Content -LiteralPath $env:JCHRONO_SCRIPT -Raw -Encoding UTF8) -split '(?m)^# POWERSHELL BEGIN\r?$',2)[1]))"
+set "JCHRONO_EXIT_CODE=%ERRORLEVEL%"
 if /i not "%~1"=="--no-pause" pause
-exit /b %DAILYNOTES_EXIT_CODE%
+exit /b %JCHRONO_EXIT_CODE%
 # POWERSHELL BEGIN
 $ErrorActionPreference = 'Stop'
-$projectRoot = $env:DAILYNOTES_ROOT
+$projectRoot = $env:JCHRONO_ROOT
 $runtimeDirectory = Join-Path $projectRoot 'artifacts/server'
 $statePath = Join-Path $runtimeDirectory 'process.json'
-$executablePath = Join-Path $projectRoot 'src/DailyNotes.Web/bin/Debug/net10.0/DailyNotes.Web.exe'
+$executablePath = Join-Path $projectRoot 'src/JChrono.Web/bin/Debug/net10.0/JChrono.Web.exe'
 $controlLock = $null
 $failed = $false
 try {
     New-Item -ItemType Directory -Path $runtimeDirectory -Force | Out-Null
     $controlLock = [System.IO.File]::Open((Join-Path $runtimeDirectory 'control.lock'), 'OpenOrCreate', 'ReadWrite', 'None')
-    Write-Host 'Stopping DailyNotes server...'
+    Write-Host 'Stopping JChrono server...'
     $message = 'No managed server is running.'
     if (Test-Path -LiteralPath $statePath) {
         $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json

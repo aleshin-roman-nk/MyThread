@@ -1,0 +1,162 @@
+<div class="page-heading">
+  <h1>Статистика и отчёты</h1>
+</div>
+
+<section class="panel calendar" aria-labelledby="statistics-calendar" [attr.aria-busy]="loading()">
+  <div class="calendar-header">
+    <h2 id="statistics-calendar">Календарь</h2>
+    <div class="calendar-controls" role="group" aria-label="Выбор месяца и года">
+      <button type="button" class="secondary" aria-label="Предыдущий месяц"
+        [disabled]="month() === '0001-01'" (click)="changeMonth(-1)">‹</button>
+      <select aria-label="Месяц" [ngModel]="monthNumber()" (ngModelChange)="selectMonth(year(), $event)">
+        @for (name of months; track name; let index = $index) {
+          <option [ngValue]="index + 1">{{ name }}</option>
+        }
+      </select>
+      <input #yearInput type="number" min="1" max="9999" step="1" aria-label="Год" [value]="year()"
+        (change)="selectMonth(yearInput.valueAsNumber, monthNumber()); yearInput.value = year().toString()">
+      <button type="button" class="secondary" aria-label="Следующий месяц"
+        [disabled]="month() === '9999-12'" (click)="changeMonth(1)">›</button>
+    </div>
+    <button type="button" class="text-button" (click)="date.set(today)">Сегодня</button>
+  </div>
+
+  <ul class="calendar-legend" aria-label="Показатели календаря">
+    <li class="time-available">Шкала · 08:00–00:00</li>
+    <li class="time-planned">Верхняя · план</li>
+    <li class="time-spent">Нижняя · сессии</li>
+  </ul>
+
+  @let hasTimeData = !loading() && !loadError();
+  <div class="calendar-days">
+    @for (weekday of weekdays; track weekday) {
+      <span class="weekday">{{ weekday }}</span>
+    }
+    @for (day of cards(); track $index) {
+      @if (day) {
+        @let summary = day.date + ', всего ' + dailyActiveTime + (hasTimeData
+          ? ', запланировано ' + formatDuration(day.plannedMinutes) + ', затрачено ' + formatSpent(day.spentMilliseconds)
+          : ', данные о плане и сессиях недоступны');
+        <button type="button" class="calendar-day" [attr.aria-label]="summary" [title]="summary"
+          [attr.aria-current]="day.date === today ? 'date' : null"
+          [attr.aria-pressed]="day.date === date()" (click)="date.set(day.date)">
+          <span class="day-number">{{ day.number }}</span>
+          <span class="time-track time-planned" aria-hidden="true">
+            <span class="time-fill" [style.width.%]="hasTimeData ? day.plannedPercent : 0"></span>
+          </span>
+          <span class="time-track time-spent" aria-hidden="true">
+            <span class="time-fill" [style.width.%]="hasTimeData ? day.spentPercent : 0"></span>
+          </span>
+        </button>
+      } @else {
+        <span aria-hidden="true"></span>
+      }
+    }
+  </div>
+</section>
+
+<section class="day-details" aria-labelledby="statistics-day" [attr.aria-busy]="loading()">
+  <div class="details-heading">
+    <h2 id="statistics-day">{{ selectedDayLabel() }}</h2>
+    @if (!loading() && !loadError()) {
+      <p class="muted">Запланировано {{ formatDuration(selectedDay()?.minutes ?? 0) }} · Затрачено {{ formatSpent(daySpent()) }}</p>
+    }
+  </div>
+  @if (loading()) {
+    <p role="status">Загружаем статистику…</p>
+  } @else if (loadError()) {
+    <p class="error" role="alert">{{ loadError() }}
+      <button class="text-button" type="button" (click)="reload()">Повторить</button>
+    </p>
+  } @else {
+    @let details = selectedDayDetails();
+    @if (details.subjects.length) {
+      <ul class="activities" aria-label="Предметы за выбранный день">
+        @for (group of details.subjects; track group.id) {
+          <li class="panel subject-group">
+            <div class="subject-heading">
+              <button type="button" class="subject-journal-button task-link" aria-haspopup="dialog"
+                (click)="openJournal(group.id, group.name, 'day')">{{ group.name }}</button>
+              <span class="muted">Запланировано {{ formatDuration(group.plannedMinutes) }} · Затрачено {{ formatSpent(group.spentMilliseconds) }}</span>
+            </div>
+            @if (group.references.size) {
+              <ul class="subject-references">
+                @for (reference of group.references.values(); track reference) {
+                  <li>
+                    <span class="muted">{{ reference.taskId === null ? 'Проект' : 'Задача' }}</span>
+                    @if (reference.taskId === null) {
+                      <a class="task-link" [routerLink]="['/projects', reference.projectId]">{{ reference.name }}</a>
+                    } @else {
+                      @if (reference.projectName) {
+                        <a class="task-link" [routerLink]="['/projects', reference.projectId]">{{ reference.projectName }}</a>
+                        <span aria-hidden="true">&nbsp;&#92;&nbsp;</span>
+                      }
+                      <a class="task-link" [routerLink]="['/projects', reference.projectId, 'tasks', reference.taskId]">{{ reference.name }}</a>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    }
+    @if (details.withoutSubject.length) {
+      <ul class="activities" aria-label="Занятия без предмета">
+        @for (activity of details.withoutSubject; track activity.id) {
+          <li class="panel activity">
+            <div class="activity-time">
+              <time [attr.datetime]="activity.date + 'T' + activity.startTime">{{ activity.startTime.slice(0, 5) }}</time>
+              <small class="muted">{{ formatDuration(activity.durationMinutes) }}</small>
+            </div>
+            <p class="description">{{ activity.description || 'Занятие без описания' }}</p>
+          </li>
+        }
+      </ul>
+    }
+    @if (!details.subjects.length && !details.withoutSubject.length) {
+      <div class="empty-state"><p>За этот день нет запланированных занятий и времени по закрытым сессиям.</p></div>
+    }
+  }
+</section>
+
+@if (journal(); as selection) {
+  <app-statistics-session-journal [subject]="selection.subject" [date]="selection.date" [period]="selection.period"
+    (dismissed)="journal.set(null)" />
+}
+
+@if (!loading() && !loadError()) {
+  <section class="panel report" aria-labelledby="statistics-report">
+    <h2 id="statistics-report">Итоги по предметам за месяц</h2>
+    @if (totals().length) {
+      <table aria-labelledby="statistics-report">
+        <thead>
+          <tr><th scope="col">Предмет</th><th scope="col">Запланировано</th><th scope="col">Затрачено</th></tr>
+        </thead>
+        <tbody>
+          @for (row of totals(); track row.id) {
+            <tr>
+              <th scope="row">
+                @if (row.id !== null) {
+                  <button type="button" class="subject-journal-button task-link" aria-haspopup="dialog"
+                    (click)="openJournal(row.id, row.name, 'month')">{{ row.name }}</button>
+                } @else {
+                  {{ row.name }}
+                }
+              </th>
+              <td>{{ formatDuration(row.plannedMinutes) }}</td>
+              <td>{{ formatSpent(row.spentMilliseconds) }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr><th scope="row">Всего</th><td>{{ formatDuration(monthTotal().plannedMinutes) }}</td>
+            <td>{{ formatSpent(monthTotal().spentMilliseconds) }}</td></tr>
+        </tfoot>
+      </table>
+    } @else {
+      <p class="muted">За этот месяц нет занятий и закрытых сессий.</p>
+    }
+  </section>
+}
+

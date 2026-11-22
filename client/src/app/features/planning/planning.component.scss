@@ -1,0 +1,28 @@
+.page-heading h1 { margin: 0; }
+.subject-setup a { font-weight: 600; text-decoration: underline; }
+.planning-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); align-items: start; gap: 32px; }
+.planning-sidebar { display: grid; gap: 16px; }
+.calendar, .summary { padding: 18px; }
+.calendar-controls { display: grid; grid-template-columns: 33px minmax(0, 1fr) 71px 33px; gap: 5px; }
+.calendar-controls button { padding: 0; font-size: 22px; }
+.calendar-controls select, .calendar-controls input { padding: 8px 6px; }
+.calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin: 12px 0 6px; text-align: center; }
+.weekday { align-self: center; padding: 5px 0; color: #596d60; font-size: 12px; font-weight: 650; }
+.calendar-day { position: relative; min-height: 35px; padding: 3px 0 7px; border-radius: 7px; background: transparent; color: #214f46; font-size: 13px; }
+.calendar-day:hover { background: #e8ede3; }
+.calendar-day[aria-current="date"] { border-color: #79906c; }
+.calendar-day.selected { background: #214f46; color: white; }
+.calendar-day.planned::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.summary-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0 0; }
+.summary-switch button { padding: 6px; font-size: 13px; }
+.summary-period { margin: 8px 0 0; }
+.summary dl { margin: 10px 0 0; font-size: 14px; }
+.summary dl div { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; overflow-wrap: anywhere; }
+.summary dd { margin: 0; font-variant-numeric: tabular-nums; }
+.summary-total { border-top: 1px solid #dfe4d6; font-weight: 650; }
+.day-plan > h2 { margin: 5px 0 16px; }
+.day-plan > h2::first-letter { text-transform: uppercase; }
+@media (max-width: 760px) {
+  .planning-layout { grid-template-columns: 1fr; gap: 24px; }
+  .planning-sidebar { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); align-items: start; }
+}

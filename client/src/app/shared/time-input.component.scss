@@ -1,0 +1,119 @@
+:host { display: block; min-width: 0; }
+.time-field { position: relative; }
+.time-field input { padding-right: 38px; }
+.clock-button {
+  position: absolute;
+  inset: 2px 2px 2px auto;
+  width: 34px;
+  padding: 6px;
+  color: #496642;
+  background: transparent;
+}
+.clock-button:hover { background: #e9eddf; }
+.clock-button svg { width: 20px; height: 20px; }
+
+dialog {
+  width: min(336px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 20px;
+  border: 1px solid #d9dfd1;
+  border-radius: 16px;
+  background: #fcfcf8;
+  color: #2d4238;
+  box-shadow: 0 24px 80px #152d3640;
+}
+dialog::backdrop { background: #172b2770; }
+h2 { margin: 0 0 12px; font-size: 19px; text-align: center; }
+.time-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 14px;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+.time-preview button { padding: 4px 12px; background: #edf0e6; color: inherit; }
+.time-preview button[aria-pressed='true'] { background: #214f46; color: white; }
+.dial {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #edf0e6;
+  user-select: none;
+}
+.dial::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #214f46;
+  transform: translate(-50%, -50%);
+  content: '';
+  pointer-events: none;
+}
+.hand {
+  position: absolute;
+  bottom: 50%;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: #214f46;
+  transform-origin: bottom center;
+  pointer-events: none;
+}
+.hand::before {
+  position: absolute;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #214f46;
+  transform: translate(-50%, -50%);
+  content: '';
+}
+.mark {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: min(12%, 34px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #2d4238;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, -50%);
+}
+.mark.inner { font-size: 12px; }
+button.mark:hover { background: #dce6d7; }
+.mark[aria-pressed='true'], .mark.selected { background: #214f46; color: white; }
+.mark:focus-visible { z-index: 1; outline-offset: 1px; }
+.minute-dial { cursor: pointer; }
+.minute-dial:focus-visible { outline: 3px solid #d2a44e; outline-offset: 3px; }
+.minute-dial .hand::before { width: 15px; height: 15px; }
+.minute-tick {
+  position: absolute;
+  inset: 2% auto 2% 50%;
+  width: 0;
+  pointer-events: none;
+}
+.minute-tick::before {
+  position: absolute;
+  width: 1px;
+  height: 4px;
+  border-radius: 2px;
+  background: #73816b;
+  transform: translateX(-50%);
+  content: "";
+}
+.minute-tick.major::before { width: 2px; height: 8px; background: #496642; }
+.minute-tick.active::before { width: 3px; height: 9px; background: #214f46; }
+.minute-dial .mark { width: min(12%, 30px); font-weight: 700; }
+.minute-dial .mark:hover:not(.selected) { background: #dce6d7; }
+
+.actions { justify-content: flex-end; margin-top: 16px; }
+.actions button { padding: 9px 13px; }

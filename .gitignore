@@ -15,11 +15,11 @@
 /client/coverage/
 /.npm-cache/
 /client/.npm-cache/
-/src/DailyNotes.Web/wwwroot/
+/src/JChrono.Web/wwwroot/
 
 # Local runtime files and SQLite data
 /artifacts/
-/src/DailyNotes.Web/App_Data/
+/src/JChrono.Web/App_Data/
 *.db
 *.db-journal
 *.db-shm

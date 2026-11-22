@@ -3,8 +3,9 @@ import { DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, EMPTY, filter, fromEvent, merge, of, switchMap } from 'rxjs';
-import { ApiService } from './api.service';
-import { ConfirmationDialogComponent } from './confirmation-dialog.component';
+import { ConfirmationDialogComponent } from './shared/confirmation-dialog.component';
+import { SessionState } from './features/sessions/session-state';
+import { SessionsApi } from './features/sessions/sessions-api';
 
 @Component({
   selector: 'app-root',
@@ -18,12 +19,13 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
   `,
   template: `
     <header class="site-header">
-      <a class="brand" routerLink="/"><img class="brand-icon" src="icons/planning-flows-192.png" width="42" height="42" alt="" aria-hidden="true">Мои потоки<span class="brand-caption">Оперативный журнал</span></a>
+      <a class="brand" routerLink="/"><img class="brand-icon" src="icons/planning-flows-192.png" width="42" height="42" alt="" aria-hidden="true">JChrono<span class="brand-caption">Оперативный журнал</span></a>
       <nav aria-label="Основная навигация">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Мой день</a>
         <a routerLink="/desktop" routerLinkActive="active" #desktopRoute="routerLinkActive" ariaCurrentWhenActive="page">Рабочий стол</a>
         <a routerLink="/subjects" routerLinkActive="active">Предметы</a>
         <a routerLink="/planning" routerLinkActive="active" ariaCurrentWhenActive="page">Планирование</a>
+        <a routerLink="/statistics" routerLinkActive="active" ariaCurrentWhenActive="page">Статистика</a>
         <a routerLink="/diary" routerLinkActive="active" ariaCurrentWhenActive="page">Мой дневник</a>
         @if (currentSessionLink(); as link) {
           <a class="current-session" [routerLink]="link" (click)="showCurrentSession()" title="Перейти к текущей сессии"><span class="session-indicator" aria-hidden="true"></span>Текущая сессия</a>
@@ -36,23 +38,24 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
   `
 })
 export class AppComponent {
-  private readonly api = inject(ApiService);
+  private readonly sessionsApi = inject(SessionsApi);
+  private readonly sessionState = inject(SessionState);
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   readonly currentSessionLink = computed(() => {
-    const session = this.api.activeSession();
+    const session = this.sessionState.activeSession();
     if (!session) return null;
     if (session.taskId !== null && session.projectId !== null) return ['/projects', session.projectId, 'tasks', session.taskId];
     if (session.projectId !== null) return ['/projects', session.projectId];
     return ['/subjects', session.subjectId];
   });
 
-  showCurrentSession() { this.api.sessionToShow.set(this.api.activeSession()); }
+  showCurrentSession() { this.sessionState.sessionToShow.set(this.sessionState.activeSession()); }
 
   constructor() {
     merge(of(null), this.router.events.pipe(filter(event => event instanceof NavigationEnd)),
       fromEvent(this.document, 'visibilitychange').pipe(filter(() => this.document.visibilityState === 'visible')))
-      .pipe(switchMap(() => this.api.currentSession().pipe(catchError(() => EMPTY))), takeUntilDestroyed())
+      .pipe(switchMap(() => this.sessionsApi.currentSession().pipe(catchError(() => EMPTY))), takeUntilDestroyed())
       .subscribe();
   }
 }

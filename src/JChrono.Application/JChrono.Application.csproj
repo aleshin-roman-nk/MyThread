@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup><ProjectReference Include="../JChrono.Domain/JChrono.Domain.csproj" /></ItemGroup>
+</Project>
+

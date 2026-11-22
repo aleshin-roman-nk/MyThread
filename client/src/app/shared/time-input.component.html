@@ -1,0 +1,53 @@
+<div class="time-field">
+  <input [id]="inputId()" type="text" autocomplete="off" placeholder="ЧЧ:ММ"
+    [value]="text()" [disabled]="disabled()"
+    [attr.aria-required]="required() || null" [attr.aria-invalid]="invalid() || null"
+    (input)="onInput($event)" (blur)="onTouched()">
+  <button #trigger class="clock-button" type="button" aria-label="Выбрать время" title="Выбрать время"
+    aria-haspopup="dialog" [disabled]="disabled()" (click)="openPicker()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5v5l3 1.5" />
+    </svg>
+  </button>
+</div>
+
+<dialog #picker [attr.aria-labelledby]="inputId() + '-picker-title'" (cancel)="closePicker($event)" (close)="onPickerClosed()">
+  <h2 [id]="inputId() + '-picker-title'">Выберите время</h2>
+  <div class="time-preview">
+    <button type="button" [attr.aria-label]="'Часы: ' + pad(hour())" autofocus
+      [attr.aria-pressed]="mode() === 'hours'" (click)="mode.set('hours')">{{ pad(hour()) }}</button>
+    <span aria-hidden="true">:</span>
+    <button #minuteMode type="button" [attr.aria-label]="'Минуты: ' + pad(minute())"
+      [attr.aria-pressed]="mode() === 'minutes'" (click)="mode.set('minutes')">{{ pad(minute()) }}</button>
+  </div>
+
+  @if (mode() === 'hours') {
+    <div class="dial" role="group" aria-label="Часы">
+      <span class="hand" [style.rotate.deg]="handAngle()" [style.height.%]="handLength()"></span>
+      @for (mark of hourMarks; track mark.value) {
+        <button class="mark" type="button" [class.inner]="mark.value === 0 || mark.value > 12"
+          [attr.aria-pressed]="hour() === mark.value" [style.left.%]="mark.x" [style.top.%]="mark.y"
+          (click)="selectHour(mark.value)">{{ pad(mark.value) }}</button>
+      }
+    </div>
+  } @else {
+    <div class="dial minute-dial" role="slider" tabindex="0" aria-label="Минуты" aria-valuemin="0" aria-valuemax="59"
+      [attr.aria-valuenow]="minute()" (click)="selectMinute($event)" (keydown)="adjustMinute($event)">
+      <span class="hand" [style.rotate.deg]="handAngle()" [style.height.%]="handLength()"></span>
+      @for (tick of minuteTicks; track tick) {
+        <span class="minute-tick" [class.major]="tick % 5 === 0" [class.active]="minute() === tick"
+          [style.rotate.deg]="tick * 6" aria-hidden="true"></span>
+      }
+      @for (mark of minuteMarks; track mark.value) {
+        <span class="mark" [class.selected]="minute() === mark.value" [style.left.%]="mark.x" [style.top.%]="mark.y"
+          aria-hidden="true" (click)="selectMinuteMark($event, mark.value)">{{ pad(mark.value) }}</span>
+      }
+    </div>
+  }
+
+  <div class="actions">
+    <button type="button" class="secondary" (click)="closePicker()">Отмена</button>
+    <button type="button" (click)="applyTime()">Применить</button>
+  </div>
+</dialog>

@@ -1,0 +1,84 @@
+<div class="timeline">
+  <div class="axis" role="group" aria-label="Шкала начала занятий">
+    <div class="axis-plot" [style.height.px]="timeline().axisHeight">
+      <div class="axis-line" aria-hidden="true"></div>
+
+      @for (tick of timeline().ticks; track tick.minute) {
+        <div class="axis-tick" [style.top.%]="tick.position" aria-hidden="true">
+          <span>{{ tickLabel(tick.minute) }}
+            @if (dayOffset(tick.minute); as offset) { <small>+{{ offset }} дн.</small> }
+          </span>
+        </div>
+      }
+
+      @for (mark of timeline().marks; track mark.activity.id) {
+        @let activity = mark.activity;
+        @let isSelected = activity.id === selectedActivity()?.id;
+        @let label = activity.subject?.shortName || activityName(activity);
+        <span class="duration" [class.selected]="isSelected" [class.blocked]="isSelected && dropBlocked()"
+          [style.top.%]="mark.position" [style.height.%]="activity.durationMinutes / timeline().span * 100"
+          aria-hidden="true"></span>
+        <button #marker type="button" class="marker-dot" [class.dragging]="isSelected && dragging()"
+          [class.blocked]="isSelected && dropBlocked()" [style.top.%]="mark.position"
+          [attr.aria-label]="markerLabel(activity)" [attr.aria-pressed]="isSelected" [disabled]="saving()"
+          [title]="markerLabel(activity)" (click)="selected.emit(activity)"
+          (pointerdown)="startDrag($event, activity, marker)" (pointermove)="updateDrag($event)"
+          (pointerup)="finishDrag($event)" (pointercancel)="cancelDrag($event)" (lostpointercapture)="cancelDrag($event)"></button>
+        <span class="label-guide" [style.top.%]="mark.position"
+          [style.--label-offset.px]="mark.labelLine - mark.position * timeline().axisHeight / 100" aria-hidden="true"></span>
+        <button type="button" class="axis-label" [style.top.px]="mark.labelLine"
+          [attr.aria-label]="activity.startTime.slice(0, 5) + ' — ' + label"
+          [title]="markerLabel(activity)" [attr.aria-pressed]="isSelected" (click)="selected.emit(activity)">
+          {{ label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="timeline-details">
+    @if (displaySelection(); as activity) {
+      <article class="panel activity" aria-label="Выбранное занятие">
+        <div class="activity-heading">
+          <div class="activity-summary">
+            <div class="activity-timing">
+              <strong><time [attr.datetime]="activity.date + 'T' + activity.startTime">{{ activity.startTime.slice(0, 5) }}</time>
+                — <time [attr.datetime]="activity.end">{{ activity.end.slice(11, 16) }}</time></strong>
+              @if (activity.end.slice(0, 10) !== activity.date) {
+                <span class="muted">Окончание {{ activity.end.slice(8, 10) }}.{{ activity.end.slice(5, 7) }}.{{ activity.end.slice(0, 4) }}</span>
+              }
+              <span class="muted">Длительность {{ formatDuration(activity.durationMinutes) }}</span>
+            </div>
+            @if (activity.subject; as subject) {
+              <a class="tag context-link subject-link" [routerLink]="['/subjects', subject.id]"
+                [title]="subject.name" [attr.aria-label]="'Открыть предмет ' + subject.name">{{ subject.shortName }}</a>
+            }
+          </div>
+          @if (dropBlocked()) {
+            <span class="drop-status" role="status">Нет места</span>
+          } @else {
+            <button type="button" class="text-button" [disabled]="saving() || dragging()" (click)="edited.emit(activity)">Изменить</button>
+          }
+        </div>
+        @if (activity.description) {
+          <p class="activity-description">{{ activity.description }}</p>
+        }
+
+        @if (activity.references.length) {
+          <section class="references" aria-labelledby="planning-references-title">
+            <h3 id="planning-references-title">Проекты и задачи</h3>
+            <div class="context-links">
+              @for (reference of activity.references; track (reference.taskId === null ? 'project-' + reference.projectId : 'task-' + reference.taskId)) {
+                <a class="tag context-link" [routerLink]="reference.taskId === null
+                  ? ['/projects', reference.projectId] : ['/projects', reference.projectId, 'tasks', reference.taskId]">
+                  <small>{{ reference.taskId === null ? 'Проект' : 'Задача' }}</small>{{ reference.name }}
+                </a>
+              }
+            </div>
+          </section>
+        }
+      </article>
+    } @else {
+      <div class="empty-state"><p>На этот день занятий пока нет.</p></div>
+    }
+  </div>
+</div>

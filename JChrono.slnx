@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JChrono.Domain/JChrono.Domain.csproj" />
+    <Project Path="src/JChrono.Application/JChrono.Application.csproj" />
+    <Project Path="src/JChrono.Infrastructure/JChrono.Infrastructure.csproj" />
+    <Project Path="src/JChrono.Web/JChrono.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JChrono.Tests/JChrono.Tests.csproj" />
+  </Folder>
+</Solution>
+
